@@ -320,3 +320,4 @@ uv run --project backend python scripts/verify_t21_ui.py
 | [可靠性验收](docs/validation/T21.md) | 历史压缩、交付检查、恢复及已知限制 |
 | [最新 UI 验收](docs/validation/T21-ui.md) | 浏览器业务链路与回归证据 |
 | [项目原始对话记录](agentbuddy-codex-conversations-2026-11-11.zip) | 两条 Codex 项目对话的正文快照，含 Markdown、JSONL 和导出说明；图片仅保留引用 |
+| [Spec / Plan / Test / Check 文档包](agentbuddy-spec-plan-test-check-2026-11-11.zip) | 规格、主计划、阶段计划、测试与验收记录，附阅读说明和文件校验清单 |
