@@ -30,8 +30,17 @@ test('configures a native model, probes tools, chats and restores after refresh'
   await page.getByRole('button', { name: /通用助手.*日常问答/ }).click();
   await page.getByRole('button', { name: /写一份项目周报/ }).click();
   await expect(page.getByRole('textbox', { name: '消息', exact: true })).toHaveValue('生成一份 Word 项目周报');
+  await page.getByRole('button', { name: '高级设置', exact: true }).click();
+  await page.getByLabel('Agent 最大决策轮数', { exact: true }).fill('35');
+  await page.getByLabel('压缩触发比例', { exact: true }).fill('0.75');
+  await page.getByRole('checkbox', { name: '允许具名的串行依赖派发例外' }).check();
+  await page.getByRole('dialog').getByRole('button', { name: /^完\s*成$/ }).click();
+  const firstRequest = page.waitForRequest(r => r.url().endsWith('/api/v1/runs') && r.method() === 'POST');
   await page.getByRole('textbox', { name: '消息', exact: true }).fill('slow 第一轮');
   await page.getByRole('button', { name: '发送', exact: true }).click();
+  const submitted = (await firstRequest).postDataJSON();
+  expect(submitted.agent_policy).toMatchObject({ max_iters: 35, allow_serial_dependency_exception: true });
+  expect(submitted.context_policy).toMatchObject({ trigger_ratio: 0.75 });
   await expect(page).toHaveURL(/projects\//);
   await page.reload();
   await expect(page.getByText('本地协议测试回答：你好', { exact: true })).toBeVisible({ timeout: 20000 });
@@ -147,6 +156,13 @@ test('configures a native model, probes tools, chats and restores after refresh'
     const afterRuns = await (await page.request.get(`/api/v1/projects/${projectId}/runs`)).json();
     expect(afterRuns.data.map((run: { id: string }) => run.id)).toEqual(beforeRuns.data.map((run: { id: string }) => run.id));
     await expect(page.getByRole('button', { name: '取消本轮任务', exact: true })).toHaveCount(0);
+    // UI-only recovery error contract; real OS-kill/resume is covered in backend.
+    await page.route('**/runs/*/checkpoint', route => route.fulfill({ json: { data: { available: true, safe: true, resumable: true } } }));
+    await page.route('**/runs/*/resume', route => route.fulfill({ status: 409, json: { error: { code: 'CHECKPOINT_FILES_CHANGED', message: '检查点之后文件发生变化，不能自动恢复' } } }));
+    await page.reload();
+    await page.getByRole('button', { name: '从检查点恢复', exact: true }).click();
+    await expect(page.getByText('检查点之后文件发生变化，不能自动恢复', { exact: true })).toBeVisible();
+
   }
 
 });

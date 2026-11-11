@@ -86,6 +86,8 @@ export function SessionControls({ choices, onChange, onBusy, children, actions, 
     <Modal title="任务高级设置" open={panel === 'advanced'} onCancel={() => setPanel(null)} footer={<Button type="primary" onClick={() => setPanel(null)}>完成</Button>}>
       <p className="panel-description">通常无需调整。达到任一上限后停止任务，保留已生成的文件。</p>
       <div className="budget-fields"><label>执行时长上限（秒）<InputNumber aria-label="执行时长上限" min={1} max={7200} value={choices.seconds_limit} onChange={n => onChange({ ...choices, seconds_limit: n ?? 1800 })} /></label><label>模型与工具调用次数<InputNumber aria-label="调用次数上限" min={1} max={500} value={choices.calls_limit} onChange={n => onChange({ ...choices, calls_limit: n ?? 120 })} /></label></div>
+      <div className="budget-fields"><label>Agent 最大决策轮数<InputNumber aria-label="Agent 最大决策轮数" min={1} max={100} value={choices.agent_policy?.max_iters ?? 50} onChange={n => onChange({ ...choices, agent_policy: { ...choices.agent_policy, max_iters: n ?? 50 } })} /></label><label>上下文压缩触发比例<InputNumber aria-label="压缩触发比例" min={0.65} max={0.9} step={0.05} value={choices.context_policy?.trigger_ratio ?? 0.8} onChange={n => onChange({ ...choices, context_policy: { ...choices.context_policy, trigger_ratio: n ?? 0.8 } })} /></label></div>
+      <Checkbox checked={choices.agent_policy?.allow_serial_dependency_exception ?? false} onChange={e => onChange({ ...choices, agent_policy: { ...choices.agent_policy, allow_serial_dependency_exception: e.target.checked } })}>允许具名的串行依赖派发例外</Checkbox>
     </Modal>
   </>;
 }

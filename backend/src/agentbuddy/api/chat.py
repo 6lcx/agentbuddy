@@ -8,6 +8,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from agentbuddy.api.contracts import Data, Listing, MessageView, ProjectView, RunAccepted, RunView
 from agentbuddy.api.system import repository
+from agentbuddy.runtime.agent_policy import AgentPolicy
+from agentbuddy.runtime.context_policy import ContextPolicy
 from agentbuddy.runtime.repository import TERMINAL, RunRepository
 
 router = APIRouter()
@@ -23,6 +25,8 @@ class RunInput(BaseModel):
     project_id: str | None = None
     model_id: str | None = None
     message: str = Field(min_length=1, max_length=32000)
+    context_policy: ContextPolicy | None = None
+    agent_policy: AgentPolicy | None = None
 
 
 def run_repository(repo=Depends(repository)):
@@ -40,7 +44,7 @@ def submit_run(
 ):
     if not body.message.strip():
         raise HTTPException(422, "请输入消息")
-    return {"data": service.submit(body.model_dump(), idempotency_key)}
+    return {"data": service.submit(body.model_dump(exclude_unset=True), idempotency_key)}
 
 
 @router.get("/projects", response_model=Listing[ProjectView])
@@ -68,6 +72,20 @@ def project_runs(project_id: str, service: Runs):
 @router.get("/runs/{run_id}", response_model=Data[RunView])
 def get_run(run_id: str, service: Runs):
     return {"data": service.public(service.get(run_id))}
+
+
+@router.get("/runs/{run_id}/checkpoint")
+def checkpoint(run_id: str, service: Runs):
+    from agentbuddy.runtime.checkpoints import checkpoint_status
+
+    return {"data": checkpoint_status(service.db, service.get(run_id))}
+
+
+@router.post("/runs/{run_id}/resume", status_code=202)
+def resume(run_id: str, service: Runs):
+    from agentbuddy.runtime.checkpoints import resume_run
+
+    return {"data": resume_run(service.db, service.get(run_id))}
 
 
 @router.get("/runs/{run_id}/events")

@@ -366,6 +366,25 @@ class NativeModel(ChatModelBase):
                             time=0,
                         )
                     )
+                    if control:
+                        values = usage or {}
+                        control.event(
+                            "model.usage",
+                            {
+                                "provider": self.kind,
+                                "input_tokens": values.get(
+                                    "input_tokens", values.get("prompt_tokens")
+                                ),
+                                "output_tokens": values.get(
+                                    "output_tokens", values.get("completion_tokens")
+                                ),
+                                "cache_hit_tokens": values.get(
+                                    "prompt_cache_hit_tokens", values.get("cache_read_input_tokens")
+                                ),
+                                "cache_miss_tokens": values.get("prompt_cache_miss_tokens"),
+                                "cache_write_tokens": values.get("cache_creation_input_tokens"),
+                            },
+                        )
                     yield ChatResponse(id=response_id, content=blocks, is_last=True, usage=metrics)
             except ProviderFailure:
                 raise

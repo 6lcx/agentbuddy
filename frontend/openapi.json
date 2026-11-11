@@ -1488,6 +1488,80 @@
         }
       }
     },
+    "/api/v1/runs/{run_id}/checkpoint": {
+      "get": {
+        "summary": "Checkpoint",
+        "operationId": "checkpoint_api_v1_runs__run_id__checkpoint_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}/resume": {
+      "post": {
+        "summary": "Resume",
+        "operationId": "resume_api_v1_runs__run_id__resume_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/runs/{run_id}/events": {
       "get": {
         "summary": "Stream Events",
@@ -1723,6 +1797,61 @@
         ],
         "title": "AcceptedOperation"
       },
+      "AgentPolicy": {
+        "properties": {
+          "max_iters": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Max Iters",
+            "default": 50
+          },
+          "calls_limit": {
+            "type": "integer",
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Calls Limit",
+            "default": 120
+          },
+          "seconds_limit": {
+            "type": "integer",
+            "maximum": 7200.0,
+            "minimum": 1.0,
+            "title": "Seconds Limit",
+            "default": 1800
+          },
+          "min_delegate_iterations": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Min Delegate Iterations",
+            "default": 4
+          },
+          "require_parallel": {
+            "type": "boolean",
+            "title": "Require Parallel",
+            "default": true
+          },
+          "require_isolated": {
+            "type": "boolean",
+            "title": "Require Isolated",
+            "default": true
+          },
+          "allow_serial_dependency_exception": {
+            "type": "boolean",
+            "title": "Allow Serial Dependency Exception",
+            "default": false
+          },
+          "allow_user_requested_exception": {
+            "type": "boolean",
+            "title": "Allow User Requested Exception",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "AgentPolicy"
+      },
       "Answer": {
         "properties": {
           "digest": {
@@ -1788,6 +1917,67 @@
           "config"
         ],
         "title": "CapabilityInput"
+      },
+      "ContextPolicy": {
+        "properties": {
+          "trigger_ratio": {
+            "type": "number",
+            "maximum": 0.9,
+            "exclusiveMinimum": 0.2,
+            "title": "Trigger Ratio",
+            "default": 0.8
+          },
+          "target_ratio": {
+            "type": "number",
+            "exclusiveMaximum": 0.9,
+            "exclusiveMinimum": 0.1,
+            "title": "Target Ratio",
+            "default": 0.6
+          },
+          "reserve_tokens": {
+            "type": "integer",
+            "maximum": 16384.0,
+            "minimum": 256.0,
+            "title": "Reserve Tokens",
+            "default": 2048
+          },
+          "result_inline_bytes": {
+            "type": "integer",
+            "maximum": 65536.0,
+            "minimum": 1024.0,
+            "title": "Result Inline Bytes",
+            "default": 12000
+          },
+          "result_max_bytes": {
+            "type": "integer",
+            "minimum": 65536.0,
+            "title": "Result Max Bytes",
+            "default": 67108864
+          },
+          "result_quota_bytes": {
+            "type": "integer",
+            "minimum": 65536.0,
+            "title": "Result Quota Bytes",
+            "default": 268435456
+          },
+          "read_bytes": {
+            "type": "integer",
+            "maximum": 16384.0,
+            "minimum": 512.0,
+            "title": "Read Bytes",
+            "default": 8192
+          },
+          "retention_days": {
+            "type": "integer",
+            "maximum": 365.0,
+            "minimum": 1.0,
+            "title": "Retention Days",
+            "default": 30
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ContextPolicy"
       },
       "Data_AcceptedOperation_": {
         "properties": {
@@ -2767,6 +2957,26 @@
             "maxLength": 32000,
             "minLength": 1,
             "title": "Message"
+          },
+          "context_policy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContextPolicy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "agent_policy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentPolicy"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,

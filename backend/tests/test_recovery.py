@@ -130,3 +130,71 @@ time.sleep(100)
             parent.wait(timeout=5)
         if handle:
             kernel.CloseHandle(handle)
+
+
+async def test_os_kill_at_checkpoint_resumes_same_run(setup_chat):
+    from pathlib import Path
+
+    from agentbuddy.persistence.repository import QueueRepository
+    from agentbuddy.runtime.checkpoints import resume_run
+    from agentbuddy.runtime.control import Control
+    from agentbuddy.runtime.executor import Executor
+    from agentbuddy.runtime.runtime_store import RuntimeStore
+
+    settings, db = setup_chat
+    _, _, factory = await configure(db)
+    repo = RunRepository(db)
+    accepted = repo.submit({"message": "hello after recovery"}, "safe-crash")
+    code = r"""
+import asyncio,sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from test_native_providers import fixture_transport
+from agentbuddy.config import Settings
+from agentbuddy.persistence.database import Database
+from agentbuddy.persistence.repository import QueueRepository
+from agentbuddy.runtime.repository import RunRepository
+from agentbuddy.runtime.executor import Executor
+from agentbuddy.runtime.context_runtime import ContextRuntime
+from agentbuddy.providers.native import NativeModel
+settings=Settings()
+db=Database(settings.database_path)
+original=ContextRuntime.on_model_call
+async def wait_after_checkpoint(self, agent, input_kwargs, next_handler):
+    await original(self, agent, input_kwargs, next_handler)
+    (settings.data_dir/'safe.marker').write_text('saved')
+    await asyncio.sleep(100)
+ContextRuntime.on_model_call=wait_after_checkpoint
+worker=QueueRepository(db).start_worker()
+run=RunRepository(db).claim(worker)
+def factory(snapshot,secret):
+    return NativeModel(snapshot,secret,fixture_transport(snapshot['provider']['provider_type'],[]))
+asyncio.run(Executor(db,factory).execute(run))
+"""
+    child = subprocess.Popen(
+        [sys.executable, "-c", code, str(Path(__file__).parent)],
+        env={**os.environ, "DATA_DIR": str(settings.data_dir)},
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+    try:
+        deadline = time.monotonic() + 20
+        while not (settings.data_dir / "safe.marker").exists():
+            assert child.poll() is None
+            assert time.monotonic() < deadline
+            await __import__("asyncio").sleep(0.05)
+    finally:
+        child.kill()
+        child.wait(timeout=10)
+    run_id = accepted["run_id"]
+    store = RuntimeStore(db, accepted["project_id"], run_id)
+    assert store.get("checkpoint")["safe"]
+    used = Control(db, run_id).state()["calls_used"]
+    repo.interrupt()
+    ledger = settings.data_dir / "agent_budgets" / run_id / "main.json"
+    import json
+
+    assert json.loads(ledger.read_text())["active_since"] is None
+    resume_run(db, repo.get(run_id))
+    assert Control(db, run_id).state()["calls_used"] == used
+    await Executor(db, factory).execute(repo.claim(QueueRepository(db).start_worker()))
+    assert repo.get(run_id)["status"] == "succeeded"

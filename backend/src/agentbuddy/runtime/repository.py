@@ -40,6 +40,8 @@ class RunRepository:
             "selection": None,
             "upload_ids": [],
             "draft_id": None,
+            "context_policy": None,
+            "agent_policy": None,
         }.items():
             if canonical.get(field) == default:
                 canonical.pop(field, None)
@@ -71,7 +73,17 @@ class RunRepository:
             if resolved["expert"] and not payload.get("model_id"):
                 model_key = resolved["expert"]["config_json"].get("model_id") or model_key
             snapshot = catalog.snapshot(conn, model_key)
+            from agentbuddy.runtime.context_policy import ContextPolicy
+
+            snapshot["context_policy"] = ContextPolicy.model_validate(
+                payload.get("context_policy") or {}
+            ).model_dump()
+            from agentbuddy.runtime.agent_policy import resolve_agent_policy
+
+            if payload.get("agent_policy"):
+                snapshot["agent_policy"] = payload["agent_policy"]
             snapshot["capabilities"] = resolved
+            snapshot["agent_policy"] = resolve_agent_policy(snapshot).model_dump()
             snapshot["upload_ids"] = payload.get("upload_ids", [])
             mode = (selection or {}).get("mode") or ("expert" if resolved["expert"] else "general")
             if mode not in ("general", "expert", "team"):
@@ -381,6 +393,11 @@ class RunRepository:
                 from agentbuddy.runtime.control import Control
 
                 Control(self.db, run_id).settle(conn)
+                from agentbuddy.runtime.agent_policy import settle_run_budgets
+
+                # Worker recovery runs after execution has stopped. Reconcile the
+                # local ledgers now, so subsequent downtime cannot accrue on resume.
+                settle_run_budgets(self.db.path.parent, run_id, stopped_at=time.time())
                 from agentbuddy.persistence.schema import subtasks
 
                 conn.execute(
@@ -390,7 +407,10 @@ class RunRepository:
                     )
                     .values(status="interrupted", finished_at=time.time())
                 )
-                error = {"code": "worker_interrupted", "message": "执行进程已停止，请重新发送任务"}
+                error = {
+                    "code": "worker_interrupted",
+                    "message": "执行进程已停止；可用时从安全检查点恢复，否则核对结果后重新提交",
+                }
                 conn.execute(
                     update(runs)
                     .where(runs.c.id == run_id)

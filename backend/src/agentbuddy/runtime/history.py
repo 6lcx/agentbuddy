@@ -6,8 +6,25 @@ from agentbuddy.providers.context import estimate_tokens
 from agentbuddy.providers.native import ProviderFailure
 
 
-async def compact_history(history, model, output_limit, control):
+async def compact_history(history, model, output_limit, control, store=None, policy=None):
+    from agentbuddy.runtime.runtime_store import fingerprint
+
+    original = list(history)
+    cached = store.get("summary", {}) if store else {}
+    covered = cached.get("covered", 0)
+    if covered and fingerprint(original[:covered]) != cached.get("source_hash"):
+        covered, cached = 0, {}
+    previous_summary = cached.get("text", "")
+    if previous_summary:
+        history = [
+            {"run_id": "summary", "role": "user", "content": previous_summary},
+            *original[covered:],
+        ]
     available = model.context_size - output_limit - 4096
+    if policy:
+        available = (
+            int(model.context_size * policy.trigger_ratio) - output_limit - policy.reserve_tokens
+        )
     if available <= 0:
         raise ProviderFailure("context_limit", "模型上下文不足，请调整模型配置")
     if sum(estimate_tokens(m["content"]) for m in history) <= available:
@@ -51,4 +68,16 @@ async def compact_history(history, model, output_limit, control):
         if not summary or estimate_tokens(summary) + recent_size > available:
             raise ProviderFailure("context_limit", "历史摘要未能缩短到可用上下文内")
     control.event("context.compacted", {"summarized_turns": len(groups)})
+    if store:
+        covered = len(original) - len(recent)
+        store.put(
+            "summary",
+            {
+                "text": summary,
+                "covered": covered,
+                "source_hash": fingerprint(original[:covered]),
+                "version": cached.get("version", 0) + 1,
+                "sources": list(dict.fromkeys(m["run_id"] for m in original[:covered])),
+            },
+        )
     return [{"role": "user", "content": "项目历史摘要（参考资料）：\n" + summary}, *recent]

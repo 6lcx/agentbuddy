@@ -178,6 +178,9 @@ class Worker:
                 from agentbuddy.runtime.files import Files
 
                 await asyncio.to_thread(Files(self.db).expire_drafts)
+                from agentbuddy.runtime.retention import expire_runtime
+
+                await asyncio.to_thread(expire_runtime, self.db)
                 from agentbuddy.catalog.capabilities import Capabilities
 
                 await asyncio.to_thread(Capabilities(self.db).seed_presets)

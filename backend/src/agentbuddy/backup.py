@@ -16,7 +16,7 @@ from filelock import FileLock
 from agentbuddy.config import Settings
 from agentbuddy.runtime.files import manifest, relative
 
-DIRECTORIES = ("projects", "uploads", "versions", "skills", "mcp_packages")
+DIRECTORIES = ("projects", "uploads", "versions", "skills", "mcp_packages", "agent_budgets")
 
 
 def validate_data(root):

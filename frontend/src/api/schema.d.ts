@@ -604,6 +604,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/runs/{run_id}/checkpoint": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Checkpoint */
+        get: operations["checkpoint_api_v1_runs__run_id__checkpoint_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{run_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume */
+        post: operations["resume_api_v1_runs__run_id__resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/runs/{run_id}/events": {
         parameters: {
             query?: never;
@@ -703,6 +737,49 @@ export interface components {
              */
             status: "queued";
         };
+        /** AgentPolicy */
+        AgentPolicy: {
+            /**
+             * Max Iters
+             * @default 50
+             */
+            max_iters: number;
+            /**
+             * Calls Limit
+             * @default 120
+             */
+            calls_limit: number;
+            /**
+             * Seconds Limit
+             * @default 1800
+             */
+            seconds_limit: number;
+            /**
+             * Min Delegate Iterations
+             * @default 4
+             */
+            min_delegate_iterations: number;
+            /**
+             * Require Parallel
+             * @default true
+             */
+            require_parallel: boolean;
+            /**
+             * Require Isolated
+             * @default true
+             */
+            require_isolated: boolean;
+            /**
+             * Allow Serial Dependency Exception
+             * @default false
+             */
+            allow_serial_dependency_exception: boolean;
+            /**
+             * Allow User Requested Exception
+             * @default false
+             */
+            allow_user_requested_exception: boolean;
+        };
         /** Answer */
         Answer: {
             /** Digest */
@@ -722,6 +799,49 @@ export interface components {
             config: {
                 [key: string]: unknown;
             };
+        };
+        /** ContextPolicy */
+        ContextPolicy: {
+            /**
+             * Trigger Ratio
+             * @default 0.8
+             */
+            trigger_ratio: number;
+            /**
+             * Target Ratio
+             * @default 0.6
+             */
+            target_ratio: number;
+            /**
+             * Reserve Tokens
+             * @default 2048
+             */
+            reserve_tokens: number;
+            /**
+             * Result Inline Bytes
+             * @default 12000
+             */
+            result_inline_bytes: number;
+            /**
+             * Result Max Bytes
+             * @default 67108864
+             */
+            result_max_bytes: number;
+            /**
+             * Result Quota Bytes
+             * @default 268435456
+             */
+            result_quota_bytes: number;
+            /**
+             * Read Bytes
+             * @default 8192
+             */
+            read_bytes: number;
+            /**
+             * Retention Days
+             * @default 30
+             */
+            retention_days: number;
         };
         /** Data[AcceptedOperation] */
         Data_AcceptedOperation_: {
@@ -1097,6 +1217,8 @@ export interface components {
             model_id?: string | null;
             /** Message */
             message: string;
+            context_policy?: components["schemas"]["ContextPolicy"] | null;
+            agent_policy?: components["schemas"]["AgentPolicy"] | null;
         };
         /** RunView */
         RunView: {
@@ -2423,6 +2545,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Data_RunView_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    checkpoint_api_v1_runs__run_id__checkpoint_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_api_v1_runs__run_id__resume_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
