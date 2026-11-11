@@ -57,6 +57,30 @@ AgentBuddy 是一个面向个人和小团队的 Web 多智能体工作台。你�
 
 截图来自当前应用的独立演示工作空间，未包含个人聊天记录或模型密钥；点击目录图片可查看大图。
 
+### 从一段会议记录，到两份交付文件
+
+给自定义的“会议纪要专家”一段项目例会记录，要求整理决定与未完成事项，并按负责人和截止日期生成待办表。下面是使用真实 DeepSeek 完成的对话：交付 `会议纪要.md` 和 `待办.csv`，可以单独查看或打包下载。
+
+![真实对话案例：整理项目例会并交付会议纪要和待办 CSV](docs/screenshots/conversation-example.jpg)
+
+### 配置自己的专家与技能
+
+设置专家的工作方法、模型和默认技能，再导入自己的 Skill ZIP，启用后即可在任务中使用。
+
+| 自定义专家 | 自定义技能 |
+| --- | --- |
+| [![会议纪要专家配置：角色指令、模型和绑定技能](docs/screenshots/custom-expert.jpg)](docs/screenshots/custom-expert.jpg) | [![导入并启用会议纪要与待办 Skill](docs/screenshots/custom-skill.jpg)](docs/screenshots/custom-skill.jpg) |
+| 保存专家指令，绑定“会议纪要与待办”和“项目文件整理”。 | 上传 Skill 包，管理启用状态、历史版本与版本更新。 |
+
+<details>
+<summary>查看服务状态：API、Worker、SQLite 与存储检查</summary>
+
+![服务状态：后端已连接、Worker 运行中、SQLite 就绪和存储检查通过](docs/screenshots/service-status.jpg)
+
+状态页读取实际后台状态，截图中的存储检查由 Worker 执行并通过。
+
+</details>
+
 ## 实测表现
 
 我们用真实模型完成任务，并检查回答和交付文件的实际内容。2026-11-11，使用 `deepseek-v4-flash` 对问答、结构化提取、JSON 文件生成和 CSV 数据汇总四类轻量任务各运行 3 次，完成了一轮串行单用户基线评测。
