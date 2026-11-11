@@ -1,0 +1,4 @@
+interface:
+  display_name: "AgentBuddy 项目开发"
+  short_description: "按规格推进 AgentBuddy 的分析、计划、实现、测试验收与后续维护"
+  default_prompt: "使用 $agentbuddy-development，根据当前 Spec 和代码状态推进本次任务，完成授权范围内的分析、计划、实现、验证与维护记录。"

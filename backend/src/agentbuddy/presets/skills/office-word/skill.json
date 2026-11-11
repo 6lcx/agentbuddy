@@ -1,0 +1,1 @@
+{"name": "Word 文档处理", "description": "生成报告、标题、段落和表格；读取外部 DOCX；修改本平台生成的报告。", "version": "1.0.0", "scripts": [], "requires": [], "effects": {}}

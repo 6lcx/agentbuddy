@@ -1,0 +1,24 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+node_modules/
+dist/
+.env
+.env.local
+.env.*
+!.env.example
+*.sqlite
+*.sqlite3
+*.db
+*.pem
+*.key
+data/
+playwright-report/
+test-results/
+
+# Local design screenshots may contain account or workspace information.
+docs/design/**/*.jpg
+docs/design/**/*.jpeg
+docs/design/**/*.png

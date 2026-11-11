@@ -1,0 +1,1 @@
+{"name": "Excel 表格处理", "description": "生成数据表、公式和图表，真实重算公式；读取外部 XLSX；修改本平台生成的表格。", "version": "1.0.0", "scripts": [], "requires": [], "effects": {}}

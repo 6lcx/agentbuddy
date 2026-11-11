@@ -1,0 +1,14 @@
+[Unit]
+Description=AgentBuddy API
+After=network.target
+
+[Service]
+User=agentbuddy
+WorkingDirectory=/opt/agentbuddy
+EnvironmentFile=/etc/agentbuddy.env
+ExecStart=/opt/agentbuddy/backend/.venv/bin/python -m uvicorn agentbuddy.main:create_app --factory --host 127.0.0.1 --port 8000 --workers 1
+Restart=on-failure
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

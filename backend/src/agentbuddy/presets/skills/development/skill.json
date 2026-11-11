@@ -1,0 +1,1 @@
+{"name": "开发与验证", "description": "生成源码和测试，用真实 Python 进程运行项目脚本并记录退出码和日志。", "version": "1.0.0", "scripts": ["scripts/run_python.py"], "requires": [], "effects": {"scripts/run_python.py": "workspace"}}

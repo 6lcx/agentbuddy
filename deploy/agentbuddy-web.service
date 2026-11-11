@@ -1,0 +1,13 @@
+[Unit]
+Description=AgentBuddy frontend and API reverse proxy
+After=agentbuddy-api.service
+
+[Service]
+User=agentbuddy
+WorkingDirectory=/opt/agentbuddy
+ExecStart=/usr/sbin/nginx -p /var/lib/agentbuddy-nginx/ -c /opt/agentbuddy/deploy/nginx.conf -g "daemon off;"
+Restart=on-failure
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target
